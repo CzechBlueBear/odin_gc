@@ -1,0 +1,4 @@
+package gc
+
+main :: proc() {
+}
