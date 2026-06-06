@@ -1,5 +1,16 @@
 # odin_gc
-An experiment with Boehm-Demers-Weise's garbage collection in Odin.
+
+An experiment with Boehm-Demers-Weiser's garbage collection in Odin.
+Please note this is *not* production-ready code; current state is "sometimes works".
+
+## The garbage collector
+
+On Linux, it is usually directly available or installable via systems' package manager under name "gc" or similar.
+The appropriate library is ``/usr/lib/libgc.so``.
+
+On Windows, you will probably need to install it yourself; no idea how's it on the Mac (Homebrew, possibly?)
+
+Sources of the GC are at https://github.com/bdwgc.
 
 ## Current status
 
