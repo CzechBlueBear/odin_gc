@@ -1,3 +1,4 @@
+#+feature dynamic-literals
 package gc
 
 import "base:runtime"
@@ -30,7 +31,7 @@ foreign gc {
 
 @(require_results)
 gc_allocator :: proc() -> runtime.Allocator {
-	return runtime.Allocator{
+	return runtime.Allocator {
 		procedure = gc_allocator_proc,
 		data = nil,
 	}
@@ -81,10 +82,12 @@ gc_allocator_proc :: proc(
 	panic("invalid allocator mode")
 }
 
+// tests --------------------------------------------------------------------
+
 import "core:testing"
 
 @(test)
-test1 :: proc(t: ^testing.T) {
+test_churn_small_blocks :: proc(t: ^testing.T) {
 
 	my_gc := gc_allocator()
 	context.allocator = my_gc
@@ -98,5 +101,36 @@ test1 :: proc(t: ^testing.T) {
 		if i % 100_000 == 0 {
 			fmt.printf("Heap size = %d\r", GC_get_heap_size());
 		}
+	}
+}
+
+@(test)
+test_dynamic_array :: proc(t: ^testing.T) {
+
+	my_gc := gc_allocator()
+	context.allocator = my_gc
+
+	some_dynamic_array := [dynamic]int{1, 4, 9}
+	defer delete(some_dynamic_array)
+
+	testing.expect(t, len(some_dynamic_array) == 3)
+	testing.expect(t, some_dynamic_array[0] == 1)
+
+	for value in some_dynamic_array {
+		fmt.println(value)
+	}
+}
+
+@(test)
+test_dynamic_map :: proc(t: ^testing.T) {
+
+	my_gc := gc_allocator()
+	context.allocator = my_gc
+
+	some_map := map[string]int{"A" = 1, "C" = 9, "B" = 4}
+	defer delete(some_map)
+
+	for key in some_map {
+		fmt.println(key)
 	}
 }
