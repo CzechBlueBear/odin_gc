@@ -24,7 +24,7 @@ context.allocator = my_gc
 in your main() before any allocations, and it should, hopefully, do its magic from now on. All other code can be unchanged;
 explicit freeing is a safe no-op.
 
-Multithreaded operation possibly works on Linux but probably not anywhere else. The problem is that Boehm's gc need to track threads
+Multithreaded operation currently does not work, at least not reliably. The problem is that Boehm's gc need to track threads
 to be able to properly track allocations and do the well known and dreaded start/stop thing, and without hooking into thread creation,
 something very stupid probably starts to happen.
 
