@@ -22,15 +22,15 @@ foreign gc {
 	GC_get_heap_size :: proc "c" () -> uint ---
 }
 
-@(init)
-init_gc :: proc "contextless" () {
-	context = runtime.default_context()
-	context.allocator = runtime.Allocator {
-		procedure = gc_allocator_proc,
-		data = nil
-	}
-	GC_init()
-}
+// @(init)
+// init_gc :: proc "contextless" () {
+// 	context = runtime.default_context()
+// 	context.allocator = runtime.Allocator {
+// 		procedure = gc_allocator_proc,
+// 		data = nil
+// 	}
+// 	GC_init()
+// }
 
 @(require_results)
 gc_allocator :: proc() -> runtime.Allocator {
@@ -40,6 +40,7 @@ gc_allocator :: proc() -> runtime.Allocator {
 	}
 }
 
+@(no_sanitize_address)
 gc_allocator_proc :: proc(
 	allocator_data: rawptr, mode: runtime.Allocator_Mode,
     size, alignment: int,
@@ -92,8 +93,8 @@ import "core:testing"
 @(test)
 test_churn_small_blocks :: proc(t: ^testing.T) {
 
-	// my_gc := gc_allocator()
-	// context.allocator = my_gc
+	my_gc := gc_allocator()
+	context.allocator = my_gc
 
 	ITERATIONS_CNT :: 10_000_000
 
@@ -110,8 +111,8 @@ test_churn_small_blocks :: proc(t: ^testing.T) {
 @(test)
 test_dynamic_array :: proc(t: ^testing.T) {
 
-	// my_gc := gc_allocator()
-	// context.allocator = my_gc
+	my_gc := gc_allocator()
+	context.allocator = my_gc
 
 	some_dynamic_array := [dynamic]int{1, 4, 9}
 	defer delete(some_dynamic_array)
@@ -127,8 +128,8 @@ test_dynamic_array :: proc(t: ^testing.T) {
 @(test)
 test_dynamic_map :: proc(t: ^testing.T) {
 
-	// my_gc := gc_allocator()
-	// context.allocator = my_gc
+	my_gc := gc_allocator()
+	context.allocator = my_gc
 
 	some_map := map[string]int{"A" = 1, "C" = 9, "B" = 4}
 	defer delete(some_map)
