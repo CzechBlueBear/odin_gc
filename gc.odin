@@ -22,12 +22,15 @@ foreign gc {
 	GC_get_heap_size :: proc "c" () -> uint ---
 }
 
-//@(init)
-//init_gc :: proc "contextless" () {
-	// FIXME: if this is uncommented, the garbage collection stops working, not sure why
-	// this should not be necessary on Linux, but what about other OSs?
-	//gc_init()
-//}
+@(init)
+init_gc :: proc "contextless" () {
+	context = runtime.default_context()
+	context.allocator = runtime.Allocator {
+		procedure = gc_allocator_proc,
+		data = nil
+	}
+	GC_init()
+}
 
 @(require_results)
 gc_allocator :: proc() -> runtime.Allocator {
@@ -89,8 +92,8 @@ import "core:testing"
 @(test)
 test_churn_small_blocks :: proc(t: ^testing.T) {
 
-	my_gc := gc_allocator()
-	context.allocator = my_gc
+	// my_gc := gc_allocator()
+	// context.allocator = my_gc
 
 	ITERATIONS_CNT :: 10_000_000
 
@@ -99,7 +102,7 @@ test_churn_small_blocks :: proc(t: ^testing.T) {
 	for i = 0; i < ITERATIONS_CNT; i += 1 {
 		ptr := make([]u8, 16)
 		if i % 100_000 == 0 {
-			fmt.printf("Heap size = %d\r", GC_get_heap_size());
+			fmt.printf("Heap size = %d\n", GC_get_heap_size());
 		}
 	}
 }
@@ -107,8 +110,8 @@ test_churn_small_blocks :: proc(t: ^testing.T) {
 @(test)
 test_dynamic_array :: proc(t: ^testing.T) {
 
-	my_gc := gc_allocator()
-	context.allocator = my_gc
+	// my_gc := gc_allocator()
+	// context.allocator = my_gc
 
 	some_dynamic_array := [dynamic]int{1, 4, 9}
 	defer delete(some_dynamic_array)
@@ -124,8 +127,8 @@ test_dynamic_array :: proc(t: ^testing.T) {
 @(test)
 test_dynamic_map :: proc(t: ^testing.T) {
 
-	my_gc := gc_allocator()
-	context.allocator = my_gc
+	// my_gc := gc_allocator()
+	// context.allocator = my_gc
 
 	some_map := map[string]int{"A" = 1, "C" = 9, "B" = 4}
 	defer delete(some_map)
