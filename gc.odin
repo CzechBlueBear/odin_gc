@@ -39,6 +39,15 @@ gc_allocator_proc :: proc(
     size, alignment: int,
     old_memory: rawptr, old_size: int, loc := #caller_location) -> ([]byte, runtime.Allocator_Error)
 {
+	// FIXME: this is a dangerous hack that works only by a lucky chance!
+	// When GC is called for the first time, the GC code detects it is not
+	// properly initialized, and calls GC_Init() to salvage the situation.
+	// But if another thread attempts to do an allocation at the same moment,
+	// before GC_Init() returns, the whole app crashes.
+	// This lock prevents this, but also slows down all concurrent allocations.
+	// The proper solution would be to call GC_Init() exactly once, at the start,
+	// but I don't know how. Tried to put it into @init section, does not work.
+	// -- bluebear
 	sync.mutex_lock(&gc_allocator_lock)
 	defer sync.mutex_unlock(&gc_allocator_lock)
 
