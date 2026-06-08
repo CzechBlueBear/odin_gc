@@ -5,6 +5,7 @@ import "base:runtime"
 import "core:fmt"
 import "core:mem"
 import "core:strings"
+import "core:sync"
 
 // A simple interface to the Boehms-Demers-Weiser garbage collector.
 //
@@ -22,15 +23,7 @@ foreign gc {
 	GC_get_heap_size :: proc "c" () -> uint ---
 }
 
-// @(init)
-// init_gc :: proc "contextless" () {
-// 	context = runtime.default_context()
-// 	context.allocator = runtime.Allocator {
-// 		procedure = gc_allocator_proc,
-// 		data = nil
-// 	}
-// 	GC_init()
-// }
+gc_allocator_lock: sync.Mutex
 
 @(require_results)
 gc_allocator :: proc() -> runtime.Allocator {
@@ -46,6 +39,9 @@ gc_allocator_proc :: proc(
     size, alignment: int,
     old_memory: rawptr, old_size: int, loc := #caller_location) -> ([]byte, runtime.Allocator_Error)
 {
+	sync.mutex_lock(&gc_allocator_lock)
+	defer sync.mutex_unlock(&gc_allocator_lock)
+
 	switch mode {
 		case .Alloc, .Alloc_Non_Zeroed:
 			if size < 0 {
@@ -83,7 +79,7 @@ gc_allocator_proc :: proc(
 		case .Query_Info:
 			return nil, .Mode_Not_Implemented
 	}
-	panic("invalid allocator mode")
+	return nil, nil
 }
 
 // tests --------------------------------------------------------------------
